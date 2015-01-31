@@ -3,11 +3,15 @@
 packages=(
   docker-io
   nodejs
+  npm
 )
 
 install_packages() {
-  yum -y update
-  yum -y install ${packages[@]}
+  yum -y shell <<END
+    update
+    install ${packages[@]}
+    run
+END
 }
 
 setup_docker() {
@@ -19,7 +23,7 @@ setup_docker() {
 
 setup_service() {
   cd /vagrant
-  npm install
+  sudo -u vagrant npm install
   touch /var/log/docker-sandbox
   chown vagrant:vagrant /var/log/docker-sandbox
   cp /vagrant/scripts/docker-sandbox /etc/init.d
