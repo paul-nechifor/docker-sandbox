@@ -6,13 +6,16 @@
 . /etc/init.d/functions
 
 name="docker-sandbox"
-prog="node /vagrant/lib > /var/log/$name 2>&1 &"
+parent_dir="/vagrant"
+prog="node $parent_dir/lib >> /var/log/$name 2>&1 &"
 lockfile="/var/lock/subsys/$name"
+pidfile="/var/run/${name}.pid"
+user="vagrant"
 
 start() {
   echo -n "Starting $name: "
-  daemon --pidfile /var/run/${name}.pid --user vagrant $prog
-  retval=$?
+  daemon --pidfile $pidfile --user $user $prog
+  local retval=$?
   [ $retval -eq 0 ] && touch $lockfile
   return $retval
 }
@@ -20,7 +23,7 @@ start() {
 stop() {
   echo -n "Shutting down $name: "
   killproc $prog
-  retval=$?
+  local retval=$?
   [ $retval -eq 0 ] && rm -f $lockfile
   return $retval
 }
@@ -29,7 +32,7 @@ case "$1" in
   start) start ;;
   stop) stop ;;
   status) status $prog ;;
-  restart) stop; start; ;;
+  restart) stop; start ;;
   *) echo "Usage: $name {start|stop|status|restart"; exit 1 ;;
 esac
 exit $?
