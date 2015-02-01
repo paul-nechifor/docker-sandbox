@@ -1,17 +1,17 @@
 express = require 'express'
-docker = require './docker'
+DockerManager = require './DockerManager'
 
 app = express()
+dockerManager = new DockerManager
+dockerManager.start()
 
 app.get '/', (req, res) ->
-  opts = {}
-  opts.script = req.query.sh
+  opts = script: req.query.sh
   unless opts.script and typeof opts.script is 'string'
-    return res.end 'send a command like ?sh=ls+-la'
-  docker.run opts, (err, output) ->
-    return res.end "#{err}" if err
-    res.end output
+    return res.status(400).end 'send a command like ?sh=ls+-la'
+  dockerManager.run opts, (response) ->
+    res.json response
 
-server = app.listen 3000, ->
-  {host, port} = server.address()
-  console.log "started on #{host}:#{port}"
+server = app.listen process.env.PORT or 3000, ->
+  {address, port} = server.address()
+  console.log "started on #{address}:#{port}"
