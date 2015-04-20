@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/bin/bash -eux
+
+name=docker-sandbox
+user=developer-svc
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 packages=(
   docker-io
@@ -6,12 +10,30 @@ packages=(
   npm
 )
 
+main() {
+  if [[ $(id -u vagrant) ]]; then
+    user=vagrant
+    root="/vagrant"
+  fi
+  install_packages
+  setup_docker
+  setup_service
+}
+
 install_packages() {
-  yum -y shell <<END
+  # Install EPEL.
+  cd /tmp
+  local file="epel-release-6-8.noarch.rpm"
+  wget -q "http://dl.fedoraproject.org/pub/epel/6/x86_64/$file"
+  rpm -Uvh "$file" >/dev/null 2>&1 || true
+  rm "$file"
+
+  yum -y shell <<<"
     update
     install ${packages[@]}
+    groupinstall 'Development tools'
     run
-END
+  "
 }
 
 setup_docker() {
@@ -22,19 +44,16 @@ setup_docker() {
 }
 
 setup_service() {
-  cd /vagrant
-  sudo -u vagrant npm install
-  touch /var/log/docker-sandbox
-  chown vagrant:vagrant /var/log/docker-sandbox
-  cp /vagrant/scripts/docker-sandbox /etc/init.d
+  id -u $user 2>/dev/null || adduser $user
+  [[ -d /data/$name ]] || mkdir -p /data/$name
+  [[ -d /var/log/$name ]] || mkdir -p /var/log/$name
+  [[ -d /var/run/$name ]] || mkdir -p /var/run/$name
+  chown $user:$user /data/$name /var/log/$name /var/run/$name
+
+  su $user -c "cd $root; ./scripts/bootstrap"
+  cp "$root/scripts/service" /etc/init.d/docker-sandbox
   chkconfig --add docker-sandbox
   service docker-sandbox start
 }
 
-main() {
-  install_packages
-  setup_docker
-  setup_service
-}
-
-main "$@"
+main

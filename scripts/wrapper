@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# This script requires `port` and `pidfile` as environment variables.
+
+set -e
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
+cd "$root"
+echo -n $$ > "$pidfile"
+exec node lib

@@ -74,7 +74,8 @@ module.exports = class Docker
       runTime: (Date.now() - @startTime) / 1000
     @cb = null
     @manager.exited @
-    run "rm -fr '#{@tmpDir}'", (err) -> throw err if err
+    if @tmpDir
+      run "rm -fr '#{@tmpDir}'", (err) -> throw err if err
 
 run = (cmds, cb) ->
   exec cmds, (err, stdout, stderr) ->
