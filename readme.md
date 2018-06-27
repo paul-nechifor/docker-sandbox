@@ -1,3 +1,7 @@
+# This repository has been moved to [gitlab.com/paul-nechifor/docker-sandbox](http://gitlab.com/paul-nechifor/docker-sandbox).
+
+Old readme:
+
 # Docker Sandbox
 
 A service for running arbitrary commands inside a Docker container.
